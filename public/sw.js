@@ -1,147 +1,100 @@
-const CACHE_NAME = 'sliceit-v1.0.0';
-const STATIC_CACHE_NAME = 'sliceit-static-v1.0.0';
-const DYNAMIC_CACHE_NAME = 'sliceit-dynamic-v1.0.0';
+/**
+ * Copyright 2018 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-const STATIC_ASSETS = [
-    '/',
-    '/manifest.json',
-    '/icon-192x192.png',
-    '/icon-512x512.png',
-];
+// If the loader is already loaded, just stop.
+if (!self.define) {
+  let registry = {};
 
-self.addEventListener('install', (event) => {
-    console.log('Service Worker: Installing...');
+  // Used for `eval` and `importScripts` where we can't get script URL by other means.
+  // In both cases, it's safe to use a global var because those functions are synchronous.
+  let nextDefineUri;
 
-    event.waitUntil(
-        caches.open(STATIC_CACHE_NAME)
-            .then((cache) => {
-                console.log('Service Worker: Caching static assets');
-                return cache.addAll(STATIC_ASSETS);
-            })
-            .catch((error) => {
-                console.log('Service Worker: Error caching static assets', error);
-            })
-    );
-
-    self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-    console.log('Service Worker: Activating...');
-
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== STATIC_CACHE_NAME &&
-                        cacheName !== DYNAMIC_CACHE_NAME &&
-                        cacheName !== CACHE_NAME) {
-                        console.log('Service Worker: Deleting old cache', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
+  const singleRequire = (uri, parentUri) => {
+    uri = new URL(uri + ".js", parentUri).href;
+    return registry[uri] || (
+      
+        new Promise(resolve => {
+          if ("document" in self) {
+            const script = document.createElement("script");
+            script.src = uri;
+            script.onload = resolve;
+            document.head.appendChild(script);
+          } else {
+            nextDefineUri = uri;
+            importScripts(uri);
+            resolve();
+          }
         })
+      
+      .then(() => {
+        let promise = registry[uri];
+        if (!promise) {
+          throw new Error(`Module ${uri} didn’t register its module`);
+        }
+        return promise;
+      })
     );
+  };
 
-    self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-    if (event.request.method !== 'GET') {
-        return;
+  self.define = (depsNames, factory) => {
+    const uri = nextDefineUri || ("document" in self ? document.currentScript.src : "") || location.href;
+    if (registry[uri]) {
+      // Module is already loading or loaded.
+      return;
     }
-
-    if (!event.request.url.startsWith(self.location.origin)) {
-        return;
-    }
-
-    event.respondWith(
-        caches.match(event.request)
-            .then((cachedResponse) => {
-                if (cachedResponse) {
-                    console.log('Service Worker: Serving from cache', event.request.url);
-                    return cachedResponse;
-                }
-
-                return fetch(event.request)
-                    .then((response) => {
-                        if (!response || response.status !== 200 || response.type !== 'basic') {
-                            return response;
-                        }
-
-                        const responseToCache = response.clone();
-
-                        caches.open(DYNAMIC_CACHE_NAME)
-                            .then((cache) => {
-                                console.log('Service Worker: Caching dynamic content', event.request.url);
-                                cache.put(event.request, responseToCache);
-                            });
-
-                        return response;
-                    })
-                    .catch((error) => {
-                        console.log('Service Worker: Fetch failed', error);
-
-                        if (event.request.destination === 'document') {
-                            return caches.match('/');
-                        }
-
-                        return new Response('Offline content not available', {
-                            status: 503,
-                            statusText: 'Service Unavailable',
-                            headers: new Headers({
-                                'Content-Type': 'text/plain'
-                            })
-                        });
-                    });
-            })
-    );
-});
-
-self.addEventListener('sync', (event) => {
-    console.log('Service Worker: Background sync', event.tag);
-
-    if (event.tag === 'budget-sync') {
-        event.waitUntil(
-            Promise.resolve()
-        );
-    }
-});
-
-self.addEventListener('push', (event) => {
-    console.log('Service Worker: Push notification received');
-
-    const options = {
-        body: event.data ? event.data.text() : 'New budget insights available!',
-        icon: '/icon-192x192.png',
-        badge: '/icon-192x192.png',
-        vibrate: [200, 100, 200],
-        data: {
-            url: '/'
-        },
-        actions: [
-            {
-                action: 'open',
-                title: 'Open App',
-                icon: '/icon-192x192.png'
-            }
-        ]
+    let exports = {};
+    const require = depUri => singleRequire(depUri, uri);
+    const specialDeps = {
+      module: { uri },
+      exports,
+      require
     };
+    registry[uri] = Promise.all(depsNames.map(
+      depName => specialDeps[depName] || require(depName)
+    )).then(deps => {
+      factory(...deps);
+      return exports;
+    });
+  };
+}
+define(['./workbox-e43f5367'], (function (workbox) { 'use strict';
 
-    event.waitUntil(
-        self.registration.showNotification('SliceIt Budget', options)
-    );
-});
+  importScripts();
+  self.skipWaiting();
+  workbox.clientsClaim();
+  workbox.registerRoute("/", new workbox.NetworkFirst({
+    "cacheName": "start-url",
+    plugins: [{
+      cacheWillUpdate: async ({
+        request,
+        response,
+        event,
+        state
+      }) => {
+        if (response && response.type === 'opaqueredirect') {
+          return new Response(response.body, {
+            status: 200,
+            statusText: 'OK',
+            headers: response.headers
+          });
+        }
+        return response;
+      }
+    }]
+  }), 'GET');
+  workbox.registerRoute(/.*/i, new workbox.NetworkOnly({
+    "cacheName": "dev",
+    plugins: []
+  }), 'GET');
 
-self.addEventListener('notificationclick', (event) => {
-    console.log('Service Worker: Notification clicked');
-
-    event.notification.close();
-
-    if (event.action === 'open' || !event.action) {
-        event.waitUntil(
-            clients.openWindow('/')
-        );
-    }
-});
+}));
