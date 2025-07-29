@@ -6,7 +6,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-    title: 'SliceIt - Budget Calculator',
+    title: 'SliceIt',
     description: 'Slice your budget perfectly with the 50-25-15-10 rule',
     icons: {
         icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'></text></svg>"

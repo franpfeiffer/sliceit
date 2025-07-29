@@ -49,7 +49,7 @@ export default function BudgetInfo() {
                         whileHover={{ scale: 1.02 }}
                         className={`flex items-center p-4 rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${card.color}`}
                     >
-                        <div className="w-12 h-12 flex items-center justify-center text-2xl mr-4 bg-gray-700 rounded-lg shadow-sm text-white">
+                        <div className="w-12 h-12 flex items-center justify-center text-2xl mr-4 shadow-sm text-white">
                             {card.icon}
                         </div>
                         <div>

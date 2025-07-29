@@ -77,12 +77,15 @@ export default function BudgetCalculator() {
                     transition={{ delay: 0.2 }}
                     className="inline-block p-4 bg-gray-800 rounded-xl shadow-lg border border-gray-700"
                 >
-                    <p className="text-sm text-white font-medium">
-                        <span className="text-red-400">50% {t.categories.needs.title.replace('🏠 ', '')}</span> •
-                        <span className="text-green-400">25% {t.categories.savings.title.replace('💰 ', '')}</span> •
-                        <span className="text-yellow-400">15% {t.categories.emergency.title.replace('🚨 ', '')}</span> •
+                    <div className="text-sm text-white font-medium flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-1">
+                        <span className="text-red-400">50% {t.categories.needs.title.replace('🏠 ', '')}</span>
+                        <span className="hidden sm:inline text-gray-500">•</span>
+                        <span className="text-green-400">25% {t.categories.savings.title.replace('💰 ', '')}</span>
+                        <span className="hidden sm:inline text-gray-500">•</span>
+                        <span className="text-yellow-400">15% {t.categories.emergency.title.replace('🚨 ', '')}</span>
+                        <span className="hidden sm:inline text-gray-500">•</span>
                         <span className="text-blue-400">10% {t.categories.wants.title.replace('🎉 ', '')}</span>
-                    </p>
+                    </div>
                 </motion.div>
             </header>
 
