@@ -58,7 +58,6 @@ export default function PWAInstall() {
                 setTimeout(() => {
                     if (!deferredPrompt) {
                         setShowInstallPrompt(true)
-                        setDebugInfo('Force showing install button (for testing)')
                     }
                 }, 3000)
             }
