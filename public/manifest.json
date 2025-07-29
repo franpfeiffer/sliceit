@@ -6,29 +6,33 @@
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#1f2937",
-  "orientation": "portrait",
-  "categories": ["finance", "productivity", "utilities"],
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
-    }
-  ],
-  "shortcuts": [
+      "purpose": "any"
+    },
     {
-      "name": "SliceIt",
-      "short_name": "SliceIt",
-      "description": "Quick access to budget calculator",
-      "url": "/",
-      "icons": [{"src": "/icon-192x192.png", "sizes": "192x192"}]
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
